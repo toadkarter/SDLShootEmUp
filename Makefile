@@ -8,7 +8,7 @@ OBJS := $(patsubst %.c,%.o, $(wildcard $(SRC_DIR)/*.c))
 
 CC := gcc
 CFLAGS := -Wall -Wextra -pedantic -g
-LDFLAGS := -lm
+LDFLAGS := -lSDL2_image
 SDL2 := `sdl2-config --cflags --libs`
 
 $(NAME): dir $(OBJS)
