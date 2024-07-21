@@ -11,6 +11,8 @@ void cleanup(void);
 
 int main(void)
 {
+    memset(&app, 0, sizeof(App));
+
     initSDL(&app);
 
     atexit(cleanup);
