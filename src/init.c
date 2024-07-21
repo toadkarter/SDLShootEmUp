@@ -2,6 +2,7 @@
 #include "../include/types.h"
 #include "../include/definitions.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 void initSDL(App* app)
 {
@@ -11,6 +12,12 @@ void initSDL(App* app)
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         printf("Couldn't initialize SDL: %s\n", SDL_GetError());
+        exit(1);
+    }
+
+    if (IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG) < 0)
+    {
+        printf("Couldn't initialize SDL Image: %s\n", SDL_GetError());
         exit(1);
     }
 

@@ -8,11 +8,10 @@ OBJS := $(patsubst %.c,%.o, $(wildcard $(SRC_DIR)/*.c))
 
 CC := gcc
 CFLAGS := -Wall -Wextra -pedantic -g
-LDFLAGS := -lSDL2_image
-SDL2 := `sdl2-config --cflags --libs`
+SDL2 := -lSDL2 -lSDL2_image
 
 $(NAME): dir $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(BIN_DIR)/$@ $(patsubst %, build/%, $(OBJS)) $(SDL2)
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/$@ $(patsubst %, build/%, $(OBJS)) $(SDL2)
 
 $(OBJS): dir
 	@mkdir -p $(BUILD_DIR)/$(@D)

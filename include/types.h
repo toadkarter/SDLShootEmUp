@@ -9,4 +9,11 @@ typedef struct App
     SDL_Window* window;
 } App;
 
+typedef struct Entity
+{
+    int x;
+    int y;
+    SDL_Texture* texture;
+} Entity;
+
 #endif

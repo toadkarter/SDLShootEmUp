@@ -53,3 +53,5 @@ dkms.conf
 
 *.kdev4
 
+/resources/*
+
