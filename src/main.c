@@ -4,6 +4,7 @@
 #include "draw.h"
 #include "input.h"
 #include "global.h"
+#include "definitions.h"
 
 static Entity player;
 
@@ -16,9 +17,13 @@ int main(void)
 
     initSDL(&app);
 
-    player.x = 100;
-    player.y = 100;
+    SDL_Point position = {100, 100};
+    player.position = position;
     player.texture = loadTexture("../resources/spaceship.png");
+
+    SDL_Point size;
+    SDL_QueryTexture(player.texture, NULL, NULL, &size.x, &size.y);
+    player.size = size;
 
     atexit(cleanup);
 
@@ -29,25 +34,45 @@ int main(void)
 
         if (app.up)
         {
-            player.y -= 4;
+            player.position.y -= PLAYER_SPEED;
+
+            if (player.position.y < 0)
+            {
+                player.position.y = 0;
+            }
         }
 
         if (app.down)
         {
-            player.y += 4;
+            player.position.y += PLAYER_SPEED;
+
+            if (player.position.y > SCREEN_HEIGHT - player.size.y)
+            {
+                player.position.y = SCREEN_HEIGHT - player.size.y;
+            }
         }
 
         if (app.left)
         {
-            player.x -= 4;
+            player.position.x -= PLAYER_SPEED;
+
+            if (player.position.x < 0)
+            {
+                player.position.x = 0;
+            }
         }
 
         if (app.right)
         {
-            player.x += 4;
+            player.position.x += PLAYER_SPEED;
+
+            if (player.position.x > SCREEN_WIDTH - player.size.x)
+            {
+                player.position.x = SCREEN_WIDTH - player.size.x;
+            }
         }
 
-        blit(player.texture, player.x, player.y);
+        blit(player.texture, player.position.x, player.position.y);
         drawScene(&app);
 
         SDL_Delay(16);

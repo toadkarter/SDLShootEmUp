@@ -16,8 +16,8 @@ typedef struct App
 
 typedef struct Entity
 {
-    int x;
-    int y;
+    SDL_Point position;
+    SDL_Point size;
     SDL_Texture* texture;
 } Entity;
 
