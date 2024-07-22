@@ -52,7 +52,9 @@ Mkfile.old
 dkms.conf
 
 *.kdev4
+*.geany
 
+/build/*
 /resources/*
 
 /SDLShootEmUp.geany
