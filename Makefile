@@ -6,7 +6,7 @@ BIN_DIR := bin
 
 OBJS := $(patsubst %.c,%.o, $(wildcard $(SRC_DIR)/*.c))
 
-CC := gcc
+CC := clang
 CFLAGS := -Wall -Wextra -pedantic -g
 SDL2 := -lSDL2 -lSDL2_image
 
