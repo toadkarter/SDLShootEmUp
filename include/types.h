@@ -12,12 +12,15 @@ typedef struct App
     int down;
     int left;
     int right;
+    int fire;
 } App;
 
 typedef struct Entity
 {
     SDL_Point position;
+    SDL_Point lastPosition;
     SDL_Point size;
+    int health;
     SDL_Texture* texture;
 } Entity;
 

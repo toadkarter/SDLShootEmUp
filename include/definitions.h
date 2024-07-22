@@ -5,5 +5,6 @@
 #define SCREEN_HEIGHT 720
 
 #define PLAYER_SPEED 4
+#define BULLET_SPEED 16
 
 #endif
