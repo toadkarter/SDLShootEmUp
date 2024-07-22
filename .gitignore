@@ -55,8 +55,8 @@ dkms.conf
 *.geany
 
 /build/*
-/resources/*
 
+/.idea/
 /SDLShootEmUp.geany
 /.vscode/
 /bin/*
