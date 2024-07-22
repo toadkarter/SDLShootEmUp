@@ -1,8 +1,9 @@
-#include "../include/draw.h"
-#include "../include/types.h"
-#include "../include/global.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+
+#include "draw.h"
+#include "types.h"
+#include "global.h"
 
 void prepareScene()
 {

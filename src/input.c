@@ -1,5 +1,5 @@
-#include "../include/input.h"
 #include <SDL2/SDL.h>
+#include "input.h"
 
 void doInput(void)
 {

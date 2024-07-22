@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CLionExternalBuildManager">
+    <target id="482c34ce-8dcf-4c32-ba09-c475a9bc8735" name="SDLShootEmUp" defaultType="MAKE">
+      <configuration id="98483f53-cd2f-4f14-a3fb-1b9568f3fe6a" name="SDLShootEmUp">
+        <build type="MAKE">
+          <make targetName="SDLShootEmUp" />
+        </build>
+        <clean type="MAKE">
+          <make targetName="clean" />
+        </clean>
+      </configuration>
+    </target>
+  </component>
+</project>

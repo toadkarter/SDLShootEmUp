@@ -1,9 +1,10 @@
-#include "../include/init.h"
-#include "../include/types.h"
-#include "../include/definitions.h"
-#include "../include/global.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+
+#include "init.h"
+#include "types.h"
+#include "definitions.h"
+#include "global.h"
 
 void initSDL()
 {

@@ -1,9 +1,9 @@
 #include <SDL2/SDL.h>
-#include "../include/init.h"
-#include "../include/types.h"
-#include "../include/draw.h"
-#include "../include/input.h"
-#include "../include/global.h"
+#include "init.h"
+#include "types.h"
+#include "draw.h"
+#include "input.h"
+#include "global.h"
 
 static Entity player;
 
