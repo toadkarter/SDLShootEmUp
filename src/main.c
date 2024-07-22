@@ -1,11 +1,10 @@
 #include <SDL2/SDL.h>
-#include <stdbool.h>
 #include "../include/init.h"
 #include "../include/types.h"
 #include "../include/draw.h"
 #include "../include/input.h"
+#include "../include/global.h"
 
-static App app;
 static Entity player;
 
 void cleanup(void);
@@ -19,7 +18,7 @@ int main(void)
 
     player.x = 100;
     player.y = 100;
-    player.texture = loadTexture(&app, "../resources/spaceship.png");
+    player.texture = loadTexture("../resources/spaceship.png");
 
     atexit(cleanup);
 
@@ -28,7 +27,7 @@ int main(void)
         prepareScene(&app);
         doInput();
 
-        blit(&app, player.texture, player.x, player.y);
+        blit(player.texture, player.x, player.y);
         drawScene(&app);
 
         SDL_Delay(16);
