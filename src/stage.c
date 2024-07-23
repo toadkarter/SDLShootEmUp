@@ -10,18 +10,23 @@ static void draw(void);
 static void initPlayer(void);
 
 static void doPlayer(void);
+static void doFighters(void);
 static void doBullets(void);
 
-static void drawPlayer(void);
+static void drawFighters(void);
 static void drawBullets(void);
 
+static void spawnEnemies();
 static void fireBullet(void);
 
 static Stage stage;
 static Entity* player;
 
-// Precaching this so we don't have to grab this every time a bullet is spawned.
+// Precaching these so we don't have to grab this every time a bullet is spawned.
 static SDL_Texture* bulletTexture;
+static SDL_Texture* enemyTexture;
+
+static int enemySpawnTimer;
 
 void initStage(void)
 {
@@ -38,6 +43,9 @@ void initStage(void)
     initPlayer();
 
     bulletTexture = loadTexture("../resources/bullet.png");
+    enemyTexture = loadTexture("../resources/enemy.png");
+
+    enemySpawnTimer = 0;
 }
 
 static void initPlayer(void)
@@ -59,7 +67,10 @@ static void initPlayer(void)
 static void logic(void)
 {
     doPlayer();
+    doFighters();
+
     doBullets();
+    spawnEnemies();
 }
 
 static void doPlayer(void)
@@ -96,9 +107,32 @@ static void doPlayer(void)
     {
         fireBullet();
     }
+}
 
-    player->position.x += player->positionDelta.x;
-    player->position.y += player->positionDelta.y;
+static void doFighters(void)
+{
+    Entity* currentEnemy = NULL;
+    Entity* previousEnemy = &stage.fighterHead;
+
+    for (currentEnemy = stage.fighterHead.nextEntity; currentEnemy != NULL; currentEnemy = currentEnemy->nextEntity)
+    {
+        currentEnemy->position.x += currentEnemy->positionDelta.x;
+        currentEnemy->position.y += currentEnemy->positionDelta.y;
+
+        if (currentEnemy != player && currentEnemy->position.x < -currentEnemy->size.x)
+        {
+            if (currentEnemy == stage.fighterTail)
+            {
+                stage.fighterTail = previousEnemy;
+            }
+
+            previousEnemy->nextEntity = currentEnemy->nextEntity;
+            free(currentEnemy);
+            currentEnemy = previousEnemy;
+        }
+
+        previousEnemy = currentEnemy;
+    }
 }
 
 static void fireBullet(void)
@@ -156,15 +190,43 @@ static void doBullets(void)
     }
 }
 
-static void draw(void)
+static void spawnEnemies()
 {
-    drawPlayer();
-    drawBullets();
+    Entity* enemy = NULL;
+
+    enemySpawnTimer--;
+    if (enemySpawnTimer <= 0)
+    {
+        enemy = malloc(sizeof(Entity));
+        memset(enemy, 0, sizeof(Entity));
+        stage.fighterTail->nextEntity = enemy;
+        stage.fighterTail = enemy;
+
+        enemy->position.x = SCREEN_WIDTH;
+        enemy->position.y = rand() % SCREEN_HEIGHT;
+        enemy->texture = enemyTexture;
+        SDL_QueryTexture(enemy->texture, NULL, NULL, &enemy->size.x, &enemy->size.y);
+
+        // Random number between -2 and -5
+        enemy->positionDelta.x = -(2 + (rand() % 4));
+
+        enemySpawnTimer = 30 + (rand() % 60);
+    }
 }
 
-static void drawPlayer(void)
+static void draw(void)
 {
-    blit(player->texture, player->position.x, player->position.y);
+    drawBullets();
+    drawFighters();
+}
+
+static void drawFighters(void)
+{
+    Entity* currentEnemy;
+    for (currentEnemy = stage.fighterHead.nextEntity; currentEnemy != NULL; currentEnemy = currentEnemy->nextEntity)
+    {
+        blit(currentEnemy->texture, currentEnemy->position.x, currentEnemy->position.y);
+    }
 }
 
 static void drawBullets(void)
