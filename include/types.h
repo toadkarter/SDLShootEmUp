@@ -1,7 +1,11 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
-#include <SDL2/SDL.h>
+#ifdef _WIN32
+    #include <SDL.h>
+#elif defined(__linux__)
+    #include <SDL2/SDL.h>
+#endif
 #include "definitions.h"
 
 typedef struct Delegate

@@ -61,3 +61,6 @@ dkms.conf
 /.vscode/
 /bin/*
 /cmake-build-debug/
+/extern/
+/build/
+CMakeSettings.json

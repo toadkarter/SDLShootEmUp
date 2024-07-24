@@ -1,4 +1,9 @@
-#include <SDL2/SDL.h>
+#ifdef _WIN32
+    #include <SDL.h>
+#elif defined(__linux__)
+    #include <SDL2/SDL.h>
+    #include <SDL2/SDL_image.h>
+#endif
 #include "stage.h"
 #include "init.h"
 #include "types.h"

@@ -8,8 +8,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 include_directories(include)
 
+if (WIN32)
+set(SDL2_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/extern/SDL2-2.30.5/include")
+set(SDL2_IMAGE_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/extern/SDL2_image-2.8.2/include")
+set(SDL2_LIBRARIES "${CMAKE_CURRENT_LIST_DIR}/extern/SDL2-2.30.5/lib/x64/SDL2.lib;${CMAKE_CURRENT_LIST_DIR}/extern/SDL2-2.30.5/lib/x64/SDL2main.lib")
+set(SDL2_IMAGE_LIBRARIES "${CMAKE_CURRENT_LIST_DIR}/extern/SDL2_image-2.8.2/lib/x64/SDL2_image.lib")
+ELSE()
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)
+ENDIF()
+
 include_directories(include ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS})
 
 # Collect all source files in src directory
