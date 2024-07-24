@@ -176,7 +176,7 @@ static void spawnEnemies()
                 fighters[i].texture = enemyTexture;
                 SDL_QueryTexture(fighters[i].texture, NULL, NULL, &fighters[i].size.x, &fighters[i].size.y);
 
-                fighters[i].positionDelta.x = -3;
+                fighters[i].positionDelta.x = -(2 + (rand() % 4));
                 enemySpawnTimer = 30 + (rand() % 60);
                 break;
             }
