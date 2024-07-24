@@ -46,8 +46,8 @@ void initStage(void)
 
     initPlayer();
 
-    bulletTexture = loadTexture("../resources/bullet.png");
-    enemyTexture = loadTexture("../resources/enemy.png");
+    bulletTexture = loadTextureFromFileName("bullet.png");
+    enemyTexture = loadTextureFromFileName("enemy.png");
 
     enemySpawnTimer = 0;
 }
@@ -64,7 +64,7 @@ static void initPlayer(void)
 
     SDL_Point playerSpawnPosition = {100, 100};
     player->position = playerSpawnPosition;
-    player->texture = loadTexture("../resources/spaceship.png");
+    player->texture = loadTextureFromFileName("spaceship.png");
     SDL_QueryTexture(player->texture, NULL, NULL, &player->size.x, &player->size.y);
 }
 

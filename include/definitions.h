@@ -1,6 +1,12 @@
 #ifndef DEFINITIONS_H_
 #define DEFINITIONS_H_
 
+#ifdef _WIN32
+    #define RESOURCES_PATH "../../resources/"
+#elif defined(__linux__)
+    #define RESOURCES_PATH "../resources/"
+#endif
+
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 

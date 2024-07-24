@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #ifdef _WIN32
     #include <SDL.h>
     #include <SDL_image.h>

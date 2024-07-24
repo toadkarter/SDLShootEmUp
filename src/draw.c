@@ -1,3 +1,5 @@
+#include <string.h>
+
 #ifdef _WIN32
     #include <SDL.h>
     #include <SDL_image.h>
@@ -21,13 +23,31 @@ void drawScene()
     SDL_RenderPresent(app.renderer);
 }
 
-SDL_Texture* loadTexture(char* filename)
+SDL_Texture* loadTextureFromFilePath(char* filepath)
 {
     SDL_Texture* texture = NULL;
 
-    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "Loading %s", filename);
+    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "Loading %s", filepath);
 
-    texture = IMG_LoadTexture(app.renderer, filename);
+    texture = IMG_LoadTexture(app.renderer, filepath);
+
+    return texture;
+}
+
+SDL_Texture* loadTextureFromFileName(char* filename)
+{
+    size_t pathLength = strlen(RESOURCES_PATH);
+    size_t filenameLength = strlen(filename);
+
+    // Adding one more for null terminator
+    size_t fullPathLength = pathLength + filenameLength + 1; 
+
+    char* fullPath = malloc(fullPathLength);
+    strcpy(fullPath, RESOURCES_PATH);
+    strcat(fullPath, filename);
+
+    SDL_Texture* texture = loadTextureFromFilePath(fullPath);
+    free(fullPath);
 
     return texture;
 }
