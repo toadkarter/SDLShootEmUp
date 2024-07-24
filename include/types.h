@@ -1,6 +1,8 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
+#include <stdbool.h>
+
 #ifdef _WIN32
     #include <SDL.h>
 #elif defined(__linux__)
@@ -30,16 +32,7 @@ typedef struct Entity
     int health;
     int reload;
     SDL_Texture* texture;
-    struct Entity* nextEntity;
+    bool spawned;
 } Entity;
-
-typedef struct Stage
-{
-    Entity fighterHead;
-    Entity* fighterTail;
-
-    Entity bulletHead;
-    Entity* bulletTail;
-} Stage;
 
 #endif

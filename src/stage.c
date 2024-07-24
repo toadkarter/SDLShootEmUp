@@ -8,6 +8,7 @@
 #include "types.h"
 #include "global.h"
 #include "draw.h"
+#include "definitions.h"
 
 static void logic(void);
 static void draw(void);
@@ -23,8 +24,10 @@ static void drawBullets(void);
 static void spawnEnemies();
 static void fireBullet(void);
 
-static Stage stage;
 static Entity* player;
+
+Entity fighters[MAX_ENTITIES_SPAWNED] = {0};
+Entity bullets[MAX_ENTITIES_SPAWNED] = {0};
 
 // Precaching these so we don't have to grab this every time a bullet is spawned.
 static SDL_Texture* bulletTexture;
@@ -37,13 +40,6 @@ void initStage(void)
     app.delegate.logic = logic;
     app.delegate.draw = draw;
 
-    memset(&stage, 0, sizeof(Stage));
-
-    // Both the first and the last pointers are the same.
-    // This is because the list is currently empty.
-    stage.fighterTail = &stage.fighterHead;
-    stage.bulletTail = &stage.bulletHead;
-
     initPlayer();
 
     bulletTexture = loadTextureFromFileName("bullet.png");
@@ -54,13 +50,8 @@ void initStage(void)
 
 static void initPlayer(void)
 {
-    // Making a player on the heap.
-    // Both the first and last entity are equal to the player.
-    // This is because no enemies exist yet.
-    player = malloc(sizeof(Entity));
-    memset(player, 0, sizeof(Entity));
-    stage.fighterTail->nextEntity = player;
-    stage.fighterTail = player;
+    fighters[PLAYER_INDEX].spawned = true;
+    player = &fighters[PLAYER_INDEX];
 
     SDL_Point playerSpawnPosition = {100, 100};
     player->position = playerSpawnPosition;
@@ -115,106 +106,79 @@ static void doPlayer(void)
 
 static void doFighters(void)
 {
-    Entity* currentEnemy = NULL;
-    Entity* previousEnemy = &stage.fighterHead;
-
-    for (currentEnemy = stage.fighterHead.nextEntity; currentEnemy != NULL; currentEnemy = currentEnemy->nextEntity)
+    for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        currentEnemy->position.x += currentEnemy->positionDelta.x;
-        currentEnemy->position.y += currentEnemy->positionDelta.y;
-
-        if (currentEnemy != player && currentEnemy->position.x < -currentEnemy->size.x)
+        if (fighters[i].spawned)
         {
-            if (currentEnemy == stage.fighterTail)
+            fighters[i].position.x += fighters[i].positionDelta.x;
+            fighters[i].position.y += fighters[i].positionDelta.y;
+
+            if (i != PLAYER_INDEX && fighters[i].position.x < -fighters[i].size.x)
             {
-                stage.fighterTail = previousEnemy;
+                fighters[i].spawned = false;
             }
-
-            previousEnemy->nextEntity = currentEnemy->nextEntity;
-            free(currentEnemy);
-            currentEnemy = previousEnemy;
         }
-
-        previousEnemy = currentEnemy;
     }
 }
 
 static void fireBullet(void)
 {
-    Entity* bullet = NULL;
+    for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
+    {
+        if (bullets[i].spawned == false)
+        {
+            bullets[i].spawned = true;
+            bullets[i].position = player->position;
+            bullets[i].positionDelta.x = PLAYER_BULLET_SPEED;
+            bullets[i].health = 1;
+            bullets[i].texture = bulletTexture;
+            SDL_QueryTexture(bullets[i].texture, NULL, NULL, &bullets[i].size.x, &bullets[i].size.y);
 
-    bullet = malloc(sizeof(Entity));
-    memset(bullet, 0, sizeof(Entity));
-    stage.bulletTail->nextEntity = bullet;
-    stage.bulletTail = bullet;
-
-    bullet->position = player->position;
-    bullet->positionDelta.x = PLAYER_BULLET_SPEED;
-    bullet->health = 1;
-    bullet->texture = bulletTexture;
-    SDL_QueryTexture(bullet->texture, NULL, NULL, &bullet->size.x, &bullet->size.y);
-
-    // Calculating the spawn position of the bullet with reference to the size of the texture.
-    bullet->position.y += (player->size.y / 2) - (bullet->size.y / 2);
-
-    player->reload = PLAYER_RELOAD_SPEED;
+            // Calculating the spawn position of the bullet with reference to the size of the texture.
+            bullets[i].position.y += (player->size.y / 2) - (bullets[i].size.y / 2);
+            player->reload = PLAYER_RELOAD_SPEED;
+            break;
+        }
+    }
 }
 
 static void doBullets(void)
 {
-    // We start iterating through the list with the second node.
-    Entity* currentBullet = NULL;
-    Entity* previousBullet = &stage.bulletHead;
-
-    // Loop through the linked list.
-    for (currentBullet = stage.bulletHead.nextEntity; currentBullet != NULL; currentBullet = currentBullet->nextEntity)
+    for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        // Update bullet movement.
-        currentBullet->position.x += currentBullet->positionDelta.x;
-        currentBullet->position.y += currentBullet->positionDelta.y;
-
-        // If bullet is off screen, need to delete heap allocated memory.
-        if (currentBullet->position.x > SCREEN_WIDTH)
+        if (bullets[i].spawned)
         {
-            // If this was the last bullet, then we replace
-            // the tail with the previously cached last bullet.
-            if (currentBullet == stage.bulletTail)
+            // Update bullet movement
+            bullets[i].position.x += bullets[i].positionDelta.x;
+            bullets[i].position.y += bullets[i].positionDelta.y;
+
+            // If bullet is off screen, need to despawn it.
+            if (bullets[i].position.x > SCREEN_WIDTH)
             {
-                stage.bulletTail = previousBullet;
+                bullets[i].spawned = false;
             }
-
-            // Delete the current node and stick the nodes on the outside
-            // of it together.
-            previousBullet->nextEntity = currentBullet->nextEntity;
-            free(currentBullet);
-            currentBullet = previousBullet;
         }
-
-        previousBullet = currentBullet;
     }
 }
 
 static void spawnEnemies()
 {
-    Entity* enemy = NULL;
-
     enemySpawnTimer--;
     if (enemySpawnTimer <= 0)
     {
-        enemy = malloc(sizeof(Entity));
-        memset(enemy, 0, sizeof(Entity));
-        stage.fighterTail->nextEntity = enemy;
-        stage.fighterTail = enemy;
+        for (int i = PLAYER_INDEX + 1; i < MAX_ENTITIES_SPAWNED; i++)
+        {
+            if (fighters[i].spawned)
+            {
+                fighters[i].position.x = SCREEN_WIDTH;
+                fighters[i].position.y = rand() % SCREEN_HEIGHT;
+                fighters[i].texture = enemyTexture;
+                SDL_QueryTexture(fighters[i].texture, NULL, NULL, &fighters[i].size.x, &fighters[i].size.y);
 
-        enemy->position.x = SCREEN_WIDTH;
-        enemy->position.y = rand() % SCREEN_HEIGHT;
-        enemy->texture = enemyTexture;
-        SDL_QueryTexture(enemy->texture, NULL, NULL, &enemy->size.x, &enemy->size.y);
-
-        // Random number between -2 and -5
-        enemy->positionDelta.x = -(2 + (rand() % 4));
-
-        enemySpawnTimer = 30 + (rand() % 60);
+                fighters[i].positionDelta.x = -3;
+                enemySpawnTimer = 30 + (rand() % 60);
+            }
+        }
     }
 }
 
@@ -226,19 +190,22 @@ static void draw(void)
 
 static void drawFighters(void)
 {
-    Entity* currentEnemy;
-    for (currentEnemy = stage.fighterHead.nextEntity; currentEnemy != NULL; currentEnemy = currentEnemy->nextEntity)
+    for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        blit(currentEnemy->texture, currentEnemy->position.x, currentEnemy->position.y);
+        if (fighters[i].spawned)
+        {
+            blit(fighters[i].texture, fighters[i].position.x, fighters[i].position.y);
+        }
     }
 }
 
 static void drawBullets(void)
 {
-    Entity* currentBullet = NULL;
-
-    for (currentBullet = stage.bulletHead.nextEntity; currentBullet != NULL; currentBullet = currentBullet->nextEntity)
+    for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        blit(currentBullet->texture, currentBullet->position.x, currentBullet->position.y);
+        if (bullets[i].spawned)
+        {
+            blit(bullets[i].texture, bullets[i].position.x, bullets[i].position.y);
+        }
     }
 }
