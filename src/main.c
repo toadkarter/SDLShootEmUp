@@ -17,22 +17,15 @@
 #include "definitions.h"
 
 static void cleanup(void);
-static void capFrameRate(long* then, float* remainder);
 
 int main(void)
 {
-    long then;
-    float remainder;
-
     memset(&app, 0, sizeof(App));
 
     initSDL();
     atexit(cleanup);
 
     initStage();
-
-    then = SDL_GetTicks();
-    remainder = 0;
 
     while (1)
     {
@@ -44,7 +37,7 @@ int main(void)
 
         drawScene();
 
-        capFrameRate(&then, &remainder);
+        SDL_Delay(16);
     }
 
     return 0;
@@ -54,28 +47,4 @@ void cleanup(void)
 {
     SDL_DestroyWindow(app.window);
     SDL_Quit();
-}
-
-// I don't fully understand this - will need to look into it.
-static void capFrameRate(long* then, float* remainder)
-{
-    long wait;
-    long frameTime;
-
-    wait = 16 + *remainder;
-    *remainder -= (int)*remainder;
-
-    frameTime = SDL_GetTicks() - *then;
-
-    wait -= frameTime;
-
-    if (wait < 1)
-    {
-        wait = 1;
-    }
-
-    SDL_Delay(wait);
-
-    *remainder += 0.667;
-    *then = SDL_GetTicks();
 }
