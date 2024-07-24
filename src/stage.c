@@ -17,15 +17,22 @@ static void initPlayer(void);
 
 static void doPlayer(void);
 static void doFighters(void);
+static void doEnemies(void);
+
 static void doBullets(void);
+
+static void keepPlayerInBounds(void);
 
 static void drawFighters(void);
 static void drawBullets(void);
 
 static void spawnEnemies(void);
 static void fireBullet(void);
+static void fireAlienBullet(Entity* enemy);
 
 static void checkCollisions(void);
+static void clearAllEntities(Entity entities[MAX_ENTITIES_SPAWNED]);
+static bool entityIsOffScreen(Entity* entity);
 
 static Entity* player;
 
@@ -35,8 +42,10 @@ Entity bullets[MAX_ENTITIES_SPAWNED] = {0};
 // Precaching these so we don't have to grab this every time a bullet is spawned.
 static SDL_Texture* bulletTexture;
 static SDL_Texture* enemyTexture;
+static SDL_Texture* alienbulletTexture;
 
 static int enemySpawnTimer;
+static int stageResetTimer;
 
 void initStage(void)
 {
@@ -47,14 +56,25 @@ void initStage(void)
 
     bulletTexture = loadTextureFromFileName("bullet.png");
     enemyTexture = loadTextureFromFileName("enemy.png");
+    alienbulletTexture = loadTextureFromFileName("alienbullet.png");
 
-    enemySpawnTimer = 0;
+    resetStage();
+}
+
+inline void resetStage(void)
+{
+    clearAllEntities(fighters);
+    clearAllEntities(bullets);
+
+    initPlayer();
+    stageResetTimer = TARGET_FPS * 2;
 }
 
 static void initPlayer(void)
 {
     fighters[PLAYER_INDEX].spawned = true;
     fighters[PLAYER_INDEX].side = SIDE_PLAYER;
+    fighters[PLAYER_INDEX].health = 1;
     player = &fighters[PLAYER_INDEX];
 
     SDL_Point playerSpawnPosition = {100, 100};
@@ -67,15 +87,31 @@ static void logic(void)
 {
     doPlayer();
     doFighters();
+    doEnemies();
 
     doBullets();
     spawnEnemies();
 
     checkCollisions();
+    keepPlayerInBounds();
+
+    if (player->spawned == false)
+    {
+        stageResetTimer--;
+        if (stageResetTimer <= 0)
+        {
+            resetStage();
+        }
+    }
 }
 
 static void doPlayer(void)
 {
+    if (player->spawned == false)
+    {
+        return;
+    }
+
     player->positionDelta.x = 0;
     player->positionDelta.y = 0;
 
@@ -121,7 +157,27 @@ static void doFighters(void)
 
             if (i != PLAYER_INDEX && (fighters[i].position.x < -fighters[i].size.x || fighters[i].health == 0))
             {
+                fighters[i].health = 0;
+            }
+
+            if (fighters[i].health == 0)
+            {
                 fighters[i].spawned = false;
+            }
+        }
+    }
+}
+
+void doEnemies(void)
+{
+    for (int i = PLAYER_INDEX + 1; i < MAX_ENTITIES_SPAWNED; i++)
+    {
+        if (fighters[i].spawned)
+        {
+            fighters[i].reload--;
+            if (fighters[i].reload <= 0)
+            {
+                fireAlienBullet(&fighters[i]);
             }
         }
     }
@@ -149,6 +205,43 @@ static void fireBullet(void)
     }
 }
 
+static void fireAlienBullet(Entity* enemy)
+{
+    for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
+    {
+        if (!bullets[i].spawned)
+        {
+            bullets[i].spawned = true;
+            bullets[i].position.x = enemy->position.x;
+            bullets[i].position.y = enemy->position.y;
+
+            bullets[i].health = 1;
+            bullets[i].texture = alienbulletTexture;
+            bullets[i].side = SIDE_ALIEN;
+            SDL_QueryTexture(bullets[i].texture, NULL, NULL, &bullets[i].size.x, &bullets[i].size.y);
+
+            bullets[i].position.x += (enemy->size.x / 2) - (enemy->size.x / 2);
+            bullets[i].position.y += (enemy->size.y / 2) - (enemy->size.y / 2);
+
+            SDL_Point playerCenter;
+            playerCenter.x = player->position.x + (player->size.x / 2);
+            playerCenter.y = player->position.y + (player->size.y / 2);
+
+            SDL_Point enemyCenter;
+            enemyCenter.x = enemy->position.x + (enemy->size.x / 2);
+            enemyCenter.y = enemy->position.y + (enemy->size.y / 2);
+
+            calculateDirection(playerCenter, enemyCenter, &bullets[i].positionDelta);
+
+            bullets[i].positionDelta.x *= ALIEN_BULLET_SPEED;
+            bullets[i].positionDelta.y *= ALIEN_BULLET_SPEED;
+
+            enemy->reload = (rand() % TARGET_FPS * 10);
+            break;
+        }
+    }
+}
+
 static void doBullets(void)
 {
     for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
@@ -160,11 +253,39 @@ static void doBullets(void)
             bullets[i].position.y += bullets[i].positionDelta.y;
 
             // If bullet is off screen, need to despawn it.
-            if (bullets[i].position.x > SCREEN_WIDTH || bullets[i].health == 0)
+            if (entityIsOffScreen(&bullets[i]) || bullets[i].health == 0)
             {
                 bullets[i].spawned = false;
             }
         }
+    }
+}
+
+static void keepPlayerInBounds(void)
+{
+    if (player->spawned == false)
+    {
+        return;
+    }
+
+    if (player->position.x < 0)
+    {
+        player->position.x = 0;
+    }
+
+    if (player->position.y < 0)
+    {
+        player->position.y = 0;
+    }
+
+    if (player->position.x > SCREEN_WIDTH / 2)
+    {
+        player->position.x = SCREEN_WIDTH / 2;
+    }
+
+    if (player->position.y > SCREEN_HEIGHT - player->size.y)
+    {
+        player->position.y = SCREEN_HEIGHT - player->size.y;
     }
 }
 
@@ -180,6 +301,7 @@ static void spawnEnemies(void)
                 fighters[i].spawned = true;
                 fighters[i].side = SIDE_ALIEN;
                 fighters[i].health = 1;
+                fighters[i].reload = TARGET_FPS * (1 + (rand() % 3));
 
                 fighters[i].position.x = SCREEN_WIDTH;
                 fighters[i].position.y = rand() % SCREEN_HEIGHT;
@@ -237,4 +359,20 @@ static void checkCollisions(void)
             }
         }
     }
+}
+
+static void clearAllEntities(Entity entities[MAX_ENTITIES_SPAWNED])
+{
+    for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
+    {
+        entities[i].spawned = false;
+    }
+}
+
+static bool entityIsOffScreen(Entity* entity)
+{
+    return entity->position.x < -entity->size.x ||
+           entity->position.y < -entity->size.y ||
+           entity->position.x > SCREEN_WIDTH ||
+           entity->position.y > SCREEN_HEIGHT;
 }

@@ -58,3 +58,22 @@ bool isCollided(Entity* entity1, Entity* entity2)
 
     return isOverlappingHorizontally && isOverlappingVertically;
 }
+
+void calculateDirection(struct SDL_Point position1, struct SDL_Point position2, struct SDL_Point* direction)
+{
+    // Getting distance so that we can normalize our result.
+    int steps = maxi(abs(position1.x - position2.x), abs(position1.y - position2.y));
+
+    if (steps == 0)
+    {
+        direction->x = 0;
+        direction->y = 0;
+        return;
+    }
+
+    direction->x = (position1.x - position2.x);
+    direction->x /= steps;
+
+    direction->y = (position1.y - position2.y);
+    direction->y /= steps;
+}
