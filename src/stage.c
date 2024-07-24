@@ -5,6 +5,7 @@
 #endif
 
 #include "stage.h"
+#include "utils.h"
 #include "types.h"
 #include "global.h"
 #include "draw.h"
@@ -21,8 +22,10 @@ static void doBullets(void);
 static void drawFighters(void);
 static void drawBullets(void);
 
-static void spawnEnemies();
+static void spawnEnemies(void);
 static void fireBullet(void);
+
+static void checkCollisions(void);
 
 static Entity* player;
 
@@ -51,6 +54,7 @@ void initStage(void)
 static void initPlayer(void)
 {
     fighters[PLAYER_INDEX].spawned = true;
+    fighters[PLAYER_INDEX].side = SIDE_PLAYER;
     player = &fighters[PLAYER_INDEX];
 
     SDL_Point playerSpawnPosition = {100, 100};
@@ -66,6 +70,8 @@ static void logic(void)
 
     doBullets();
     spawnEnemies();
+
+    checkCollisions();
 }
 
 static void doPlayer(void)
@@ -113,7 +119,7 @@ static void doFighters(void)
             fighters[i].position.x += fighters[i].positionDelta.x;
             fighters[i].position.y += fighters[i].positionDelta.y;
 
-            if (i != PLAYER_INDEX && fighters[i].position.x < -fighters[i].size.x)
+            if (i != PLAYER_INDEX && (fighters[i].position.x < -fighters[i].size.x || fighters[i].health == 0))
             {
                 fighters[i].spawned = false;
             }
@@ -128,6 +134,7 @@ static void fireBullet(void)
         if (bullets[i].spawned == false)
         {
             bullets[i].spawned = true;
+            bullets[i].side = SIDE_PLAYER;
             bullets[i].position = player->position;
             bullets[i].positionDelta.x = PLAYER_BULLET_SPEED;
             bullets[i].health = 1;
@@ -153,7 +160,7 @@ static void doBullets(void)
             bullets[i].position.y += bullets[i].positionDelta.y;
 
             // If bullet is off screen, need to despawn it.
-            if (bullets[i].position.x > SCREEN_WIDTH)
+            if (bullets[i].position.x > SCREEN_WIDTH || bullets[i].health == 0)
             {
                 bullets[i].spawned = false;
             }
@@ -161,7 +168,7 @@ static void doBullets(void)
     }
 }
 
-static void spawnEnemies()
+static void spawnEnemies(void)
 {
     enemySpawnTimer--;
     if (enemySpawnTimer <= 0)
@@ -171,6 +178,9 @@ static void spawnEnemies()
             if (!fighters[i].spawned)
             {
                 fighters[i].spawned = true;
+                fighters[i].side = SIDE_ALIEN;
+                fighters[i].health = 1;
+
                 fighters[i].position.x = SCREEN_WIDTH;
                 fighters[i].position.y = rand() % SCREEN_HEIGHT;
                 fighters[i].texture = enemyTexture;
@@ -208,6 +218,23 @@ static void drawBullets(void)
         if (bullets[i].spawned)
         {
             blit(bullets[i].texture, bullets[i].position.x, bullets[i].position.y);
+        }
+    }
+}
+
+static void checkCollisions(void)
+{
+    for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
+    {
+        for (int j = 0; j < MAX_ENTITIES_SPAWNED; j++)
+        {
+            if (bullets[i].spawned &&
+                fighters[j].spawned &&
+                isCollided(&bullets[i], &fighters[j]))
+            {
+                bullets[i].health = 0;
+                fighters[j].health = 0;
+            }
         }
     }
 }

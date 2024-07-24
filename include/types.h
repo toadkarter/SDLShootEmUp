@@ -32,6 +32,8 @@ typedef struct Entity
     int health;
     int reload;
     SDL_Texture* texture;
+    int side;
+
     bool spawned;
 } Entity;
 

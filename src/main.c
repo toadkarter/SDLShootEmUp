@@ -14,7 +14,6 @@
 #include "draw.h"
 #include "input.h"
 #include "global.h"
-#include "definitions.h"
 
 static void cleanup(void);
 

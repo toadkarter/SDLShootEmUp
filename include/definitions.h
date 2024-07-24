@@ -19,4 +19,7 @@
 
 #define MAX_KEYBOARD_KEYS 350
 
+#define SIDE_PLAYER 0
+#define SIDE_ALIEN 1
+
 #endif
