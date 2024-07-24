@@ -168,8 +168,9 @@ static void spawnEnemies()
     {
         for (int i = PLAYER_INDEX + 1; i < MAX_ENTITIES_SPAWNED; i++)
         {
-            if (fighters[i].spawned)
+            if (!fighters[i].spawned)
             {
+                fighters[i].spawned = true;
                 fighters[i].position.x = SCREEN_WIDTH;
                 fighters[i].position.y = rand() % SCREEN_HEIGHT;
                 fighters[i].texture = enemyTexture;
@@ -177,6 +178,7 @@ static void spawnEnemies()
 
                 fighters[i].positionDelta.x = -3;
                 enemySpawnTimer = 30 + (rand() % 60);
+                break;
             }
         }
     }
