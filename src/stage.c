@@ -193,6 +193,9 @@ static void fireBullet(void)
             bullets[i].side = SIDE_PLAYER;
             bullets[i].position = player->position;
             bullets[i].positionDelta.x = PLAYER_BULLET_SPEED;
+
+            // We could be reusing an alien bullet - make sure to reset Y to 0.
+            bullets[i].positionDelta.y = 0;
             bullets[i].health = 1;
             bullets[i].texture = bulletTexture;
             SDL_QueryTexture(bullets[i].texture, NULL, NULL, &bullets[i].size.x, &bullets[i].size.y);

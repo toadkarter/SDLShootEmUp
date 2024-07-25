@@ -64,3 +64,4 @@ dkms.conf
 /extern/
 /build/
 CMakeSettings.json
+/.cache/*
