@@ -27,7 +27,7 @@ typedef struct App
 typedef struct Entity
 {
     SDL_Point position;
-    SDL_Point positionDelta;
+    SDL_FPoint positionDelta;
     SDL_Point size;
     int health;
     int reload;
