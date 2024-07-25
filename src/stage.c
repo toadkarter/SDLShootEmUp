@@ -16,18 +16,18 @@ static void draw(void);
 static void initPlayer(void);
 
 static void doPlayer(void);
-static void doFighters(void);
-static void doEnemies(void);
+static void doAllFighters(void);
+static void attemptEnemiesAttack(void);
 
 static void doBullets(void);
 
 static void keepPlayerInBounds(void);
 
-static void drawFighters(void);
+static void drawAllFighters(void);
 static void drawBullets(void);
 
 static void spawnEnemies(void);
-static void fireBullet(void);
+static void spawnPlayerBullet(void);
 static void fireAlienBullet(Entity* enemy);
 
 static void checkCollisions(void);
@@ -86,8 +86,8 @@ static void initPlayer(void)
 static void logic(void)
 {
     doPlayer();
-    doFighters();
-    doEnemies();
+    doAllFighters();
+    attemptEnemiesAttack();
 
     doBullets();
     spawnEnemies();
@@ -142,66 +142,70 @@ static void doPlayer(void)
 
     if (app.keyboard[SDL_SCANCODE_SPACE] && player->reload == 0)
     {
-        fireBullet();
+        spawnPlayerBullet();
     }
 }
 
-static void doFighters(void)
+static void doAllFighters(void)
 {
     for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        if (fighters[i].spawned)
+        Entity* currentFighter = &fighters[i];
+        if (currentFighter->spawned)
         {
-            fighters[i].position.x += fighters[i].positionDelta.x;
-            fighters[i].position.y += fighters[i].positionDelta.y;
+            currentFighter->position.x += currentFighter->positionDelta.x;
+            currentFighter->position.y += currentFighter->positionDelta.y;
 
-            if (i != PLAYER_INDEX && (fighters[i].position.x < -fighters[i].size.x || fighters[i].health == 0))
+            if (i != PLAYER_INDEX && (currentFighter->position.x < -currentFighter->size.x || currentFighter->health == 0))
             {
-                fighters[i].health = 0;
+                currentFighter->health = 0;
             }
 
-            if (fighters[i].health == 0)
+            if (currentFighter->health == 0)
             {
-                fighters[i].spawned = false;
+                currentFighter->spawned = false;
             }
         }
     }
 }
 
-void doEnemies(void)
+void attemptEnemiesAttack(void)
 {
     for (int i = PLAYER_INDEX + 1; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        if (fighters[i].spawned)
+        Entity* currentEnemy = &fighters[i];
+        if (currentEnemy->spawned)
         {
-            fighters[i].reload--;
-            if (fighters[i].reload <= 0)
+            currentEnemy->reload--;
+            if (currentEnemy->reload <= 0)
             {
-                fireAlienBullet(&fighters[i]);
+                fireAlienBullet(currentEnemy);
             }
         }
     }
 }
 
-static void fireBullet(void)
+static void spawnPlayerBullet(void)
 {
     for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        if (bullets[i].spawned == false)
+        Entity* currentPlayerBullet = &bullets[i];
+        if (currentPlayerBullet->spawned == false)
         {
-            bullets[i].spawned = true;
-            bullets[i].side = SIDE_PLAYER;
-            bullets[i].position = player->position;
-            bullets[i].positionDelta.x = PLAYER_BULLET_SPEED;
+            currentPlayerBullet->spawned = true;
+            currentPlayerBullet->side = SIDE_PLAYER;
+            currentPlayerBullet->position = player->position;
+            currentPlayerBullet->positionDelta.x = PLAYER_BULLET_SPEED;
 
             // We could be reusing an alien bullet - make sure to reset Y to 0.
-            bullets[i].positionDelta.y = 0;
-            bullets[i].health = 1;
-            bullets[i].texture = bulletTexture;
-            SDL_QueryTexture(bullets[i].texture, NULL, NULL, &bullets[i].size.x, &bullets[i].size.y);
+            currentPlayerBullet->positionDelta.y = 0;
+
+            currentPlayerBullet->health = 1;
+            currentPlayerBullet->texture = bulletTexture;
+            SDL_QueryTexture(currentPlayerBullet->texture, NULL, NULL, &currentPlayerBullet->size.x, &currentPlayerBullet->size.y);
 
             // Calculating the spawn position of the bullet with reference to the size of the texture.
-            bullets[i].position.y += (player->size.y / 2) - (bullets[i].size.y / 2);
+            currentPlayerBullet->position.y += (currentPlayerBullet->size.y / 2) - (currentPlayerBullet->size.y / 2);
             player->reload = PLAYER_RELOAD_SPEED;
             break;
         }
@@ -212,19 +216,20 @@ static void fireAlienBullet(Entity* enemy)
 {
     for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        if (!bullets[i].spawned)
+        Entity* currentAlienBullet = &bullets[i];
+        if (currentAlienBullet->spawned == false)
         {
-            bullets[i].spawned = true;
-            bullets[i].position.x = enemy->position.x;
-            bullets[i].position.y = enemy->position.y;
+            currentAlienBullet->spawned = true;
+            currentAlienBullet->position.x = enemy->position.x;
+            currentAlienBullet->position.y = enemy->position.y;
 
-            bullets[i].health = 1;
-            bullets[i].texture = alienbulletTexture;
-            bullets[i].side = SIDE_ALIEN;
-            SDL_QueryTexture(bullets[i].texture, NULL, NULL, &bullets[i].size.x, &bullets[i].size.y);
+            currentAlienBullet->health = 1;
+            currentAlienBullet->texture = alienbulletTexture;
+            currentAlienBullet->side = SIDE_ALIEN;
+            SDL_QueryTexture(currentAlienBullet->texture, NULL, NULL, &currentAlienBullet->size.x, &currentAlienBullet->size.y);
 
-            bullets[i].position.x += (enemy->size.x / 2) - (enemy->size.x / 2);
-            bullets[i].position.y += (enemy->size.y / 2) - (enemy->size.y / 2);
+            currentAlienBullet->position.x += (enemy->size.x / 2) - (enemy->size.x / 2);
+            currentAlienBullet->position.y += (enemy->size.y / 2) - (enemy->size.y / 2);
 
             SDL_Point playerCenter;
             playerCenter.x = player->position.x + (player->size.x / 2);
@@ -234,10 +239,10 @@ static void fireAlienBullet(Entity* enemy)
             enemyCenter.x = enemy->position.x + (enemy->size.x / 2);
             enemyCenter.y = enemy->position.y + (enemy->size.y / 2);
 
-            calculateDirection(playerCenter, enemyCenter, &bullets[i].positionDelta);
+            calculateDirection(playerCenter, enemyCenter, &currentAlienBullet->positionDelta);
 
-            bullets[i].positionDelta.x *= ALIEN_BULLET_SPEED;
-            bullets[i].positionDelta.y *= ALIEN_BULLET_SPEED;
+            currentAlienBullet->positionDelta.x *= ALIEN_BULLET_SPEED;
+            currentAlienBullet->positionDelta.y *= ALIEN_BULLET_SPEED;
 
             enemy->reload = (rand() % TARGET_FPS * 10);
             break;
@@ -249,16 +254,17 @@ static void doBullets(void)
 {
     for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        if (bullets[i].spawned)
+        Entity* currentBullet = &bullets[i];
+        if (currentBullet->spawned)
         {
             // Update bullet movement
-            bullets[i].position.x += bullets[i].positionDelta.x;
-            bullets[i].position.y += bullets[i].positionDelta.y;
+            currentBullet->position.x += currentBullet->positionDelta.x;
+            currentBullet->position.y += currentBullet->positionDelta.y;
 
             // If bullet is off screen, need to despawn it.
-            if (entityIsOffScreen(&bullets[i]) || bullets[i].health == 0)
+            if (entityIsOffScreen(currentBullet) || currentBullet->health == 0)
             {
-                bullets[i].spawned = false;
+                currentBullet->spawned = false;
             }
         }
     }
@@ -299,7 +305,7 @@ static void spawnEnemies(void)
     {
         for (int i = PLAYER_INDEX + 1; i < MAX_ENTITIES_SPAWNED; i++)
         {
-            if (!fighters[i].spawned)
+            if (fighters[i].spawned == false)
             {
                 fighters[i].spawned = true;
                 fighters[i].side = SIDE_ALIEN;
@@ -322,16 +328,17 @@ static void spawnEnemies(void)
 static void draw(void)
 {
     drawBullets();
-    drawFighters();
+    drawAllFighters();
 }
 
-static void drawFighters(void)
+static void drawAllFighters(void)
 {
     for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        if (fighters[i].spawned)
+        Entity* currentFighter = &fighters[i];
+        if (currentFighter->spawned)
         {
-            blit(fighters[i].texture, fighters[i].position.x, fighters[i].position.y);
+            blit(currentFighter->texture, currentFighter->position.x, currentFighter->position.y);
         }
     }
 }
@@ -340,9 +347,10 @@ static void drawBullets(void)
 {
     for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
-        if (bullets[i].spawned)
+        Entity* currentBullet = &bullets[i];
+        if (currentBullet->spawned)
         {
-            blit(bullets[i].texture, bullets[i].position.x, bullets[i].position.y);
+            blit(currentBullet->texture, currentBullet->position.x, currentBullet->position.y);
         }
     }
 }
@@ -351,14 +359,16 @@ static void checkCollisions(void)
 {
     for (int i = 0; i < MAX_ENTITIES_SPAWNED; i++)
     {
+        Entity* currentBullet = &bullets[i];
         for (int j = 0; j < MAX_ENTITIES_SPAWNED; j++)
         {
-            if (bullets[i].spawned &&
-                fighters[j].spawned &&
-                isCollided(&bullets[i], &fighters[j]))
+            Entity* currentFighter = &fighters[j];
+            if (currentBullet->spawned &&
+                currentFighter->spawned &&
+                isCollided(currentBullet, currentFighter))
             {
-                bullets[i].health = 0;
-                fighters[j].health = 0;
+                currentBullet->health = 0;
+                currentFighter->health = 0;
             }
         }
     }
